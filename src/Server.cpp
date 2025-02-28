@@ -60,6 +60,7 @@ void Server::listen() noexcept {
       "HTTP/1.1 200 OK\r\n"
       "Content-Type: text/html; charset=UTF-8\r\n"
       "Connection: close\r\n"
+      "Server: Buildinger\r\n"
       "\r\n"
       "<html>\n"
       "<body>" + ip + "</body>\n"
