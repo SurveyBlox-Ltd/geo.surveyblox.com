@@ -23,11 +23,13 @@ void Server::create() noexcept {
   address.sin_port = htons(80);
 
   if (bind(socket, (struct sockaddr *)&address, sizeof(address)) < 0) {
+    close(socket);
     Log::error(strerror(errno));
     std::exit(EXIT_FAILURE);
   }
 
   if (::listen(socket, 3) < 0) {
+    close(socket);
     Log::error(strerror(errno));
     std::exit(EXIT_FAILURE);
   }
@@ -37,24 +39,21 @@ void Server::create() noexcept {
 
 void Server::listen() noexcept {
   while(true) {
-    struct sockaddr_in clientAddr;
-    socklen_t clientAddrLen = sizeof(clientAddr);
+    struct sockaddr_in clientAddress;
+    socklen_t clientAddressSize = sizeof(clientAddress);
 
-    int clientSocket = accept(socket, NULL, NULL);
+    int clientSocket = accept(socket, (struct sockaddr*)&clientAddress, &clientAddressSize);
     if (clientSocket == -1) {
       Log::error(strerror(errno));
-      close(clientSocket);
       continue;
     }
 
-    const char *clientIp = inet_ntoa(clientAddr.sin_addr);
+    const char *clientIp = inet_ntoa(clientAddress.sin_addr);
     if (clientIp == NULL) {
-      Log::error(strerror(errno));
       close(clientSocket);
+      Log::error(strerror(errno));
       continue;
     }
-
-    const std::string ip = std::string(clientIp);
 
     const std::string response =
       "HTTP/1.1 200 OK\r\n"
@@ -63,13 +62,13 @@ void Server::listen() noexcept {
       "Server: Buildinger\r\n"
       "\r\n"
       "<html>\n"
-      "<body>" + ip + "</body>\n"
+      "<body>" + std::string(clientIp) + "</body>\n"
       "</html>";
 
     size_t bytesSent = send(clientSocket, response.c_str(), response.size(), 0);
     if (bytesSent < 0) {
-      Log::error(strerror(errno));
       close(clientSocket);
+      Log::error(strerror(errno));
       continue;
     }
 
