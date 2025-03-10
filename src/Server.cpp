@@ -55,15 +55,15 @@ void Server::listen() noexcept {
       continue;
     }
 
+    const std::string responseBody = "<html>\n<body>" + std::string(clientIp) + "</body>\n</html>";
     const std::string response =
       "HTTP/1.1 200 OK\r\n"
       "Content-Type: text/html; charset=UTF-8\r\n"
+      "Content-Length: " + std::to_string(responseBody.size()) + "\r\n"
       "Connection: close\r\n"
       "Server: Buildinger\r\n"
-      "\r\n"
-      "<html>\n"
-      "<body>" + std::string(clientIp) + "</body>\n"
-      "</html>";
+      "\r\n" +
+      responseBody;
 
     size_t bytesSent = send(clientSocket, response.c_str(), response.size(), 0);
     if (bytesSent < 0) {
